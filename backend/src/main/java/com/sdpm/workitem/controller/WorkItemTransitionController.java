@@ -1,0 +1,42 @@
+package com.sdpm.workitem.controller;
+
+import com.sdpm.workitem.common.PageResp;
+import com.sdpm.workitem.common.Result;
+import com.sdpm.workitem.dto.WorkItemTransitionReqDTO;
+import com.sdpm.workitem.service.WorkItemTransitionService;
+import com.sdpm.workitem.vo.WorkItemStatusHistoryRespVO;
+import com.sdpm.workitem.vo.WorkItemTransitionRespVO;
+
+import jakarta.validation.Valid;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/v1")
+public class WorkItemTransitionController {
+
+    @Autowired
+    private WorkItemTransitionService transitionService;
+
+    @PostMapping("/work-items/{id}/transitions")
+    public Result<WorkItemTransitionRespVO> transit(
+            @PathVariable Long id,
+            @Valid @RequestBody WorkItemTransitionReqDTO req) {
+        return Result.success(transitionService.transit(id, req.getTargetStatus(), req.getReason()));
+    }
+
+    @GetMapping("/work-items/{id}/transitions")
+    public Result<PageResp<WorkItemStatusHistoryRespVO>> listHistory(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "1") Integer pageNo,
+            @RequestParam(defaultValue = "20") Integer pageSize) {
+        return Result.success(transitionService.listHistory(id, pageNo, pageSize));
+    }
+}

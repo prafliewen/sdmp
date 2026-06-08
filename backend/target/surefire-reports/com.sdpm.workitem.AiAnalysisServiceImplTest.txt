@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.sdpm.workitem.AiAnalysisServiceImplTest
+-------------------------------------------------------------------------------
+Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.578 s -- in com.sdpm.workitem.AiAnalysisServiceImplTest

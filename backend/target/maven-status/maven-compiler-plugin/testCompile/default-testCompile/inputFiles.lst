@@ -1,0 +1,16 @@
+/Users/prafliewen/Desktop/后端方向/sdpm/backend/src/test/java/com/sdpm/workitem/AiAnalysisControllerIntegrationTest.java
+/Users/prafliewen/Desktop/后端方向/sdpm/backend/src/test/java/com/sdpm/workitem/AiAnalysisServiceImplTest.java
+/Users/prafliewen/Desktop/后端方向/sdpm/backend/src/test/java/com/sdpm/workitem/ClarificationControllerIntegrationTest.java
+/Users/prafliewen/Desktop/后端方向/sdpm/backend/src/test/java/com/sdpm/workitem/ClarificationServiceImplTest.java
+/Users/prafliewen/Desktop/后端方向/sdpm/backend/src/test/java/com/sdpm/workitem/CommonLayerTest.java
+/Users/prafliewen/Desktop/后端方向/sdpm/backend/src/test/java/com/sdpm/workitem/DictControllerIntegrationTest.java
+/Users/prafliewen/Desktop/后端方向/sdpm/backend/src/test/java/com/sdpm/workitem/DictServiceImplTest.java
+/Users/prafliewen/Desktop/后端方向/sdpm/backend/src/test/java/com/sdpm/workitem/GlobalExceptionHandlerTest.java
+/Users/prafliewen/Desktop/后端方向/sdpm/backend/src/test/java/com/sdpm/workitem/MockAiAdapterTest.java
+/Users/prafliewen/Desktop/后端方向/sdpm/backend/src/test/java/com/sdpm/workitem/P0ClarificationGuardTest.java
+/Users/prafliewen/Desktop/后端方向/sdpm/backend/src/test/java/com/sdpm/workitem/StateMachineTest.java
+/Users/prafliewen/Desktop/后端方向/sdpm/backend/src/test/java/com/sdpm/workitem/UserContextTest.java
+/Users/prafliewen/Desktop/后端方向/sdpm/backend/src/test/java/com/sdpm/workitem/WorkItemControllerIntegrationTest.java
+/Users/prafliewen/Desktop/后端方向/sdpm/backend/src/test/java/com/sdpm/workitem/WorkItemServiceImplTest.java
+/Users/prafliewen/Desktop/后端方向/sdpm/backend/src/test/java/com/sdpm/workitem/WorkItemTransitionControllerIntegrationTest.java
+/Users/prafliewen/Desktop/后端方向/sdpm/backend/src/test/java/com/sdpm/workitem/WorkItemTransitionServiceImplTest.java
