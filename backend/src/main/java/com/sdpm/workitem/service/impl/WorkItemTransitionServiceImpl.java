@@ -56,7 +56,7 @@ public class WorkItemTransitionServiceImpl implements WorkItemTransitionService 
             target = WorkItemStatusEnum.fromCode(targetStatus);
         } catch (IllegalArgumentException e) {
             throw new BizException(ErrorCode.BIZ_PARAM_INVALID,
-                "未知的工作项状态: " + (e.getMessage() == null ? targetStatus : e.getMessage()));
+                "未知的工作项状态: " + e.getMessage());
         }
 
         stateMachine.assertTransit(current, target);
