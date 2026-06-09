@@ -1,7 +1,7 @@
 package com.sdpm.workitem.ai.capability;
 
 import com.sdpm.workitem.ai.AiCapability;
-import com.sdpm.workitem.ai.adapter.AiAdapter;
+import com.sdpm.workitem.ai.adapter.AiAdapterRouter;
 import com.sdpm.workitem.entity.WorkItemEntity;
 import com.sdpm.workitem.enumeration.AiAnalysisTypeEnum;
 
@@ -14,7 +14,7 @@ import java.util.Map;
 public class SummaryCapability implements AiCapability {
 
     @Autowired
-    private AiAdapter aiAdapter;
+    private AiAdapterRouter aiAdapterRouter;
 
     @Override
     public AiAnalysisTypeEnum supports() {
@@ -23,6 +23,6 @@ public class SummaryCapability implements AiCapability {
 
     @Override
     public Map<String, Object> analyse(WorkItemEntity workItem) {
-        return aiAdapter.execute(AiAnalysisTypeEnum.SUMMARY, workItem);
+        return aiAdapterRouter.execute(AiAnalysisTypeEnum.SUMMARY, workItem);
     }
 }

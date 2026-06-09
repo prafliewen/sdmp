@@ -3,6 +3,7 @@ package com.sdpm.workitem.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.Version;
 
 import java.time.LocalDateTime;
 
@@ -29,6 +30,9 @@ public class ClarificationQuestionEntity {
     private LocalDateTime createdAt;
 
     private LocalDateTime resolvedAt;
+
+    @Version
+    private Long version;
 
     public Long getId() {
         return id;
@@ -108,5 +112,13 @@ public class ClarificationQuestionEntity {
 
     public void setResolvedAt(LocalDateTime resolvedAt) {
         this.resolvedAt = resolvedAt;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 }

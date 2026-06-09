@@ -3,11 +3,13 @@ package com.sdpm.workitem;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sdpm.workitem.ai.AiCapability;
+import com.sdpm.workitem.ai.adapter.AiAdapterRouter;
 import com.sdpm.workitem.common.ErrorCode;
 import com.sdpm.workitem.common.PageResp;
 import com.sdpm.workitem.entity.AiAnalysisResultEntity;
 import com.sdpm.workitem.entity.WorkItemEntity;
 import com.sdpm.workitem.enumeration.AiAnalysisTypeEnum;
+import com.sdpm.workitem.enumeration.AiSourceEnum;
 import com.sdpm.workitem.exception.BizException;
 import com.sdpm.workitem.mapper.AiAnalysisResultMapper;
 import com.sdpm.workitem.mapper.WorkItemMapper;
@@ -43,6 +45,9 @@ class AiAnalysisServiceImplTest {
     @Mock
     private AiCapability riskCapability;
 
+    @Mock
+    private AiAdapterRouter aiAdapterRouter;
+
     @InjectMocks
     private AiAnalysisServiceImpl aiAnalysisService;
 
@@ -59,6 +64,7 @@ class AiAnalysisServiceImplTest {
         // @InjectMocks doesn't handle List<AiCapability> properly
         ReflectionTestUtils.setField(aiAnalysisService, "capabilities",
                 Arrays.asList(summaryCapability, riskCapability));
+        lenient().when(aiAdapterRouter.activeSource()).thenReturn(AiSourceEnum.MOCK);
     }
 
     private void stubCapabilities() {

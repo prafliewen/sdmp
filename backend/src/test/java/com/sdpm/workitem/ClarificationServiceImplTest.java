@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -72,7 +73,6 @@ class ClarificationServiceImplTest {
         dto.setRaisedBy("王五");
 
         when(workItemMapper.selectById(1L)).thenReturn(workItem);
-        when(clarificationQuestionMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
         when(clarificationQuestionMapper.insert(any(ClarificationQuestionEntity.class))).thenReturn(1);
 
         ClarificationRespVO result = clarificationService.addQuestion(1L, dto);
@@ -90,7 +90,8 @@ class ClarificationServiceImplTest {
         dto.setQuestion("重复问题");
 
         when(workItemMapper.selectById(1L)).thenReturn(workItem);
-        when(clarificationQuestionMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(questionEntity);
+        doThrow(new org.springframework.dao.DuplicateKeyException("uk_clarification_question_work_item_question"))
+                .when(clarificationQuestionMapper).insert(any(ClarificationQuestionEntity.class));
 
         BizException ex = assertThrows(BizException.class,
                 () -> clarificationService.addQuestion(1L, dto));
@@ -117,7 +118,6 @@ class ClarificationServiceImplTest {
         dto.setSeverity(null);
 
         when(workItemMapper.selectById(1L)).thenReturn(workItem);
-        when(clarificationQuestionMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
         when(clarificationQuestionMapper.insert(any(ClarificationQuestionEntity.class))).thenReturn(1);
 
         ClarificationRespVO result = clarificationService.addQuestion(1L, dto);

@@ -7,6 +7,7 @@ import com.sdpm.workitem.dto.DictUpdateReqDTO;
 import com.sdpm.workitem.entity.DictItemEntity;
 import com.sdpm.workitem.exception.BizException;
 import com.sdpm.workitem.mapper.DictItemMapper;
+import com.sdpm.workitem.mapper.WorkItemMapper;
 import com.sdpm.workitem.service.impl.DictServiceImpl;
 import com.sdpm.workitem.vo.DictRespVO;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +31,9 @@ class DictServiceImplTest {
 
     @Mock
     private DictItemMapper dictItemMapper;
+
+    @Mock
+    private WorkItemMapper workItemMapper;
 
     @InjectMocks
     private DictServiceImpl dictService;
@@ -174,5 +178,16 @@ class DictServiceImplTest {
         BizException ex = assertThrows(BizException.class,
                 () -> dictService.deleteDict(999L));
         assertEquals(ErrorCode.BIZ_NOT_FOUND.getCode(), ex.getErrorCode().getCode());
+    }
+
+    @Test
+    @DisplayName("删除被工作项引用的字典 → 抛BIZ_DICT_IN_USE")
+    void shouldThrowDictInUseOnDelete() {
+        when(dictItemMapper.selectById(1L)).thenReturn(dictEntity);
+        when(workItemMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
+
+        BizException ex = assertThrows(BizException.class,
+                () -> dictService.deleteDict(1L));
+        assertEquals(ErrorCode.BIZ_DICT_IN_USE.getCode(), ex.getErrorCode().getCode());
     }
 }

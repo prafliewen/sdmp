@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sdpm.workitem.entity.WorkItemEntity;
 import com.sdpm.workitem.enumeration.AiAnalysisTypeEnum;
+import com.sdpm.workitem.enumeration.AiSourceEnum;
 
 import org.springframework.stereotype.Component;
 
@@ -26,6 +27,11 @@ public class MockAiAdapter implements AiAdapter {
         mockResponses.put(AiAnalysisTypeEnum.CLARIFICATION, buildClarification());
         mockResponses.put(AiAnalysisTypeEnum.ACCEPTANCE, buildAcceptance());
         mockResponses.put(AiAnalysisTypeEnum.TASK_BREAKDOWN, buildTaskBreakdown());
+    }
+
+    @Override
+    public AiSourceEnum source() {
+        return AiSourceEnum.MOCK;
     }
 
     @Override

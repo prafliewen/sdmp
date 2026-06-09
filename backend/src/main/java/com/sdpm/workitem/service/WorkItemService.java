@@ -18,4 +18,6 @@ public interface WorkItemService {
     PageResp<WorkItemRespVO> pageWorkItems(WorkItemQueryReqDTO req);
 
     void softDeleteWorkItem(Long id);
+
+    String getStatusCode(Long id);
 }

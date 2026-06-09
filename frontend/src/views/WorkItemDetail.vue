@@ -25,7 +25,7 @@
           </div>
           <div class="detail-field">
             <label>优先级</label>
-            <span><span class="tag" :class="'tag-p' + (item.priority || '').replace('P', '').toLowerCase()">{{ item.priority }}</span></span>
+            <span><span class="tag" :class="'tag-' + getPriorityTagClass(item.priority)">{{ item.priority }}</span></span>
           </div>
           <div class="detail-field">
             <label>风险等级</label>
@@ -115,7 +115,7 @@
             <div v-if="clarifications.length > 0">
               <div v-for="c in clarifications" :key="c.id" class="clarify-item">
                 <div class="clarify-header">
-                  <span class="tag" :class="'tag-p' + (c.severity || '').replace('P', '').toLowerCase()">{{ c.severity }}</span>
+                <span class="tag" :class="'tag-' + getPriorityTagClass(c.severity)">{{ c.severity }}</span>
                   <span class="status-badge" :class="c.status === 'OPEN' ? 'status-IN_PROGRESS' : 'status-DONE'">
                     {{ c.status === 'OPEN' ? '未解决' : '已解决' }}
                   </span>
@@ -288,12 +288,14 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getWorkItemDetail } from '../api/workitem'
 import { getClarifications, addClarification, resolveClarification } from '../api/clarification'
-import { transitWorkItem, getTransitionHistory } from '../api/transition'
+import { transitWorkItem, getTransitionHistory, getAllowedTransitions } from '../api/transition'
 import { triggerAiAnalysis, getAiAnalyses } from '../api/ai'
+import { showError, showSuccess } from '../utils/request'
+import { statusLabel, formatDate, getTypeTagClass, getPriorityTagClass } from '../utils/workitem-helpers'
 
 const route = useRoute()
 const router = useRouter()
@@ -312,51 +314,8 @@ const tabs = [
 ]
 const activeTab = ref('clarification')
 
-// Status transition map
-const transitionMap = {
-  DRAFT: ['ANALYZING'],
-  ANALYZING: ['READY', 'DRAFT'],
-  READY: ['IN_PROGRESS', 'ANALYZING'],
-  IN_PROGRESS: ['IN_TESTING', 'READY'],
-  IN_TESTING: ['DONE', 'IN_PROGRESS'],
-  DONE: []
-}
-
-const allowedTransitions = computed(() => {
-  if (!item.value) return []
-  return transitionMap[item.value.status] || []
-})
-
-const statusLabelMap = {
-  DRAFT: '草稿',
-  ANALYZING: '分析中',
-  READY: '就绪',
-  IN_PROGRESS: '进行中',
-  IN_TESTING: '测试中',
-  DONE: '已完成'
-}
-
-function statusLabel(status) {
-  return statusLabelMap[status] || status
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return '-'
-  const d = new Date(dateStr)
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  const h = String(d.getHours()).padStart(2, '0')
-  const min = String(d.getMinutes()).padStart(2, '0')
-  return `${y}-${m}-${day} ${h}:${min}`
-}
-
-function getTypeTagClass(type) {
-  if (type === 'STORY') return 'story'
-  if (type === 'BUG') return 'bug'
-  if (type === 'TASK') return 'task'
-  return ''
-}
+// Allowed transitions, fetched from backend (state machine single source of truth)
+const allowedTransitions = ref([])
 
 function goBack() {
   router.push({ name: 'WorkItemList' })
@@ -398,7 +357,10 @@ function changeClarifyPage(p) {
 }
 
 async function handleAddClarification() {
-  if (!clarifyForm.question.trim()) return
+  if (!clarifyForm.question.trim()) {
+    showError('请填写问题描述')
+    return
+  }
   clarifyAdding.value = true
   try {
     await addClarification(id.value, {
@@ -410,6 +372,7 @@ async function handleAddClarification() {
     showClarifyAdd.value = false
     clarifyPageNo.value = 1
     fetchClarifications()
+    showSuccess('已提交澄清问题')
   } finally {
     clarifyAdding.value = false
   }
@@ -422,7 +385,11 @@ function openResolveModal(c) {
 }
 
 async function handleResolve() {
-  if (!resolveForm.answer.trim() || !resolveTarget.value) return
+  if (!resolveForm.answer.trim()) {
+    showError('请填写答复内容')
+    return
+  }
+  if (!resolveTarget.value) return
   resolving.value = true
   try {
     await resolveClarification(resolveTarget.value.id, {
@@ -431,6 +398,7 @@ async function handleResolve() {
     showResolveModal.value = false
     resolveTarget.value = null
     fetchClarifications()
+    showSuccess('已解决')
   } finally {
     resolving.value = false
   }
@@ -467,7 +435,10 @@ function changeTransitionPage(p) {
 }
 
 async function handleTransition() {
-  if (!transitionForm.targetStatus) return
+  if (!transitionForm.targetStatus) {
+    showError('请选择目标状态')
+    return
+  }
   transiting.value = true
   try {
     await transitWorkItem(id.value, {
@@ -477,12 +448,23 @@ async function handleTransition() {
     showTransitionModal.value = false
     transitionForm.targetStatus = ''
     transitionForm.reason = ''
-    // Refresh item detail + transition history
+    // Refresh item detail + transition history + allowed transitions
     await fetchDetail()
     transitionPageNo.value = 1
     fetchTransitionHistory()
+    fetchAllowedTransitions()
+    showSuccess('状态流转成功')
   } finally {
     transiting.value = false
+  }
+}
+
+async function fetchAllowedTransitions() {
+  try {
+    const codes = await getAllowedTransitions(id.value)
+    allowedTransitions.value = Array.isArray(codes) ? codes : []
+  } catch {
+    allowedTransitions.value = []
   }
 }
 
@@ -523,6 +505,7 @@ async function handleTriggerAi() {
     await triggerAiAnalysis(id.value, { analysisType: aiType.value })
     aiPageNo.value = 1
     fetchAiAnalyses()
+    showSuccess('AI 分析已触发')
   } finally {
     aiTriggering.value = false
   }
@@ -540,11 +523,44 @@ async function fetchDetail() {
   }
 }
 
+function resetAllState() {
+  item.value = null
+  loading.value = true
+  clarifications.value = []
+  clarifyPageNo.value = 1
+  clarifyTotal.value = 0
+  transitionHistory.value = []
+  transitionPageNo.value = 1
+  transitionTotal.value = 0
+  aiAnalyses.value = []
+  aiPageNo.value = 1
+  aiTotal.value = 0
+  allowedTransitions.value = []
+  showClarifyAdd.value = false
+  showResolveModal.value = false
+  showTransitionModal.value = false
+  resolveTarget.value = null
+  activeTab.value = 'clarification'
+}
+
 onMounted(() => {
   fetchDetail()
   fetchClarifications()
   fetchTransitionHistory()
   fetchAiAnalyses()
+  fetchAllowedTransitions()
+})
+
+// 路由参数变化时重置所有分页 state 并重新拉取（修复复用实例的旧数据 bug）
+watch(() => route.params.id, (newId, oldId) => {
+  if (newId && newId !== oldId) {
+    resetAllState()
+    fetchDetail()
+    fetchClarifications()
+    fetchTransitionHistory()
+    fetchAiAnalyses()
+    fetchAllowedTransitions()
+  }
 })
 </script>
 
@@ -572,10 +588,6 @@ onMounted(() => {
   color: #999;
   margin-bottom: 2px;
 }
-
-.tag-story { background: #e8f5e9; color: #2e7d32; }
-.tag-bug { background: #fde8e8; color: #c62828; }
-.tag-task { background: #e3f2fd; color: #1565c0; }
 
 .tab-bar {
   display: flex;

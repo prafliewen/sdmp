@@ -1,6 +1,7 @@
 /Users/prafliewen/Desktop/后端方向/sdpm/backend/src/main/java/com/sdpm/workitem/Application.java
 /Users/prafliewen/Desktop/后端方向/sdpm/backend/src/main/java/com/sdpm/workitem/ai/AiCapability.java
 /Users/prafliewen/Desktop/后端方向/sdpm/backend/src/main/java/com/sdpm/workitem/ai/adapter/AiAdapter.java
+/Users/prafliewen/Desktop/后端方向/sdpm/backend/src/main/java/com/sdpm/workitem/ai/adapter/AiAdapterRouter.java
 /Users/prafliewen/Desktop/后端方向/sdpm/backend/src/main/java/com/sdpm/workitem/ai/adapter/MockAiAdapter.java
 /Users/prafliewen/Desktop/后端方向/sdpm/backend/src/main/java/com/sdpm/workitem/ai/capability/ClarificationCapability.java
 /Users/prafliewen/Desktop/后端方向/sdpm/backend/src/main/java/com/sdpm/workitem/ai/capability/RiskCapability.java
@@ -59,6 +60,8 @@
 /Users/prafliewen/Desktop/后端方向/sdpm/backend/src/main/java/com/sdpm/workitem/service/impl/DictServiceImpl.java
 /Users/prafliewen/Desktop/后端方向/sdpm/backend/src/main/java/com/sdpm/workitem/service/impl/WorkItemServiceImpl.java
 /Users/prafliewen/Desktop/后端方向/sdpm/backend/src/main/java/com/sdpm/workitem/service/impl/WorkItemTransitionServiceImpl.java
+/Users/prafliewen/Desktop/后端方向/sdpm/backend/src/main/java/com/sdpm/workitem/validation/EnumValue.java
+/Users/prafliewen/Desktop/后端方向/sdpm/backend/src/main/java/com/sdpm/workitem/validation/EnumValueValidator.java
 /Users/prafliewen/Desktop/后端方向/sdpm/backend/src/main/java/com/sdpm/workitem/vo/AiAnalysisRespVO.java
 /Users/prafliewen/Desktop/后端方向/sdpm/backend/src/main/java/com/sdpm/workitem/vo/ClarificationRespVO.java
 /Users/prafliewen/Desktop/后端方向/sdpm/backend/src/main/java/com/sdpm/workitem/vo/DictRespVO.java

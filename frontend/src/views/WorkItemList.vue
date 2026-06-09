@@ -74,7 +74,7 @@
               <span class="tag" :class="'tag-' + getTypeTagClass(item.type)">{{ item.type }}</span>
             </td>
             <td>
-              <span class="tag" :class="'tag-p' + (item.priority || '').replace('P', '').toLowerCase()">{{ item.priority }}</span>
+              <span class="tag" :class="'tag-' + getPriorityTagClass(item.priority)">{{ item.priority }}</span>
             </td>
             <td>
               <span class="status-badge" :class="'status-' + item.status">{{ statusLabel(item.status) }}</span>
@@ -148,6 +148,8 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getWorkItemList, createWorkItem } from '../api/workitem'
+import { showError, showSuccess } from '../utils/request'
+import { statusLabel, formatDate, getTypeTagClass, getPriorityTagClass } from '../utils/workitem-helpers'
 
 const router = useRouter()
 
@@ -179,37 +181,6 @@ const createForm = reactive({
   assignee: '',
   tagsInput: ''
 })
-
-function getTypeTagClass(type) {
-  if (type === 'STORY') return 'story'
-  if (type === 'BUG') return 'bug'
-  if (type === 'TASK') return 'task'
-  return ''
-}
-
-const statusLabelMap = {
-  DRAFT: '草稿',
-  ANALYZING: '分析中',
-  READY: '就绪',
-  IN_PROGRESS: '进行中',
-  IN_TESTING: '测试中',
-  DONE: '已完成'
-}
-
-function statusLabel(status) {
-  return statusLabelMap[status] || status
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return '-'
-  const d = new Date(dateStr)
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  const h = String(d.getHours()).padStart(2, '0')
-  const min = String(d.getMinutes()).padStart(2, '0')
-  return `${y}-${m}-${day} ${h}:${min}`
-}
 
 async function fetchList() {
   loading.value = true
@@ -256,9 +227,11 @@ function goDetail(id) {
 
 async function handleCreate() {
   if (!createForm.title.trim()) {
+    showError('请填写标题')
     return
   }
   if (!createForm.type) {
+    showError('请选择类型')
     return
   }
   creating.value = true
@@ -276,6 +249,7 @@ async function handleCreate() {
     await createWorkItem(payload)
     showCreateModal.value = false
     resetCreateForm()
+    showSuccess('创建成功')
     fetchList()
   } finally {
     creating.value = false
@@ -338,10 +312,6 @@ onMounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-.tag-story { background: #e8f5e9; color: #2e7d32; }
-.tag-bug { background: #fde8e8; color: #c62828; }
-.tag-task { background: #e3f2fd; color: #1565c0; }
 
 .pagination {
   display: flex;

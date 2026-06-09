@@ -14,4 +14,6 @@ public interface ClarificationService {
     PageResp<ClarificationRespVO> listQuestions(Long workItemId, String severity, String status, Integer pageNo, Integer pageSize);
 
     long countP0Open(Long workItemId);
+
+    long countOpenByWorkItemId(Long workItemId);
 }

@@ -41,11 +41,27 @@ request.interceptors.response.use(
 )
 
 function showToast(message, type) {
+  let container = document.getElementById('app-toast-container')
+  if (!container) {
+    container = document.createElement('div')
+    container.id = 'app-toast-container'
+    container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none;'
+    document.body.appendChild(container)
+  }
   const toast = document.createElement('div')
   toast.className = `toast toast-${type}`
   toast.textContent = message
-  document.body.appendChild(toast)
+  toast.style.pointerEvents = 'auto'
+  container.appendChild(toast)
   setTimeout(() => toast.remove(), 3000)
+}
+
+export function showSuccess(message) {
+  showToast(message, 'success')
+}
+
+export function showError(message) {
+  showToast(message, 'error')
 }
 
 export default request

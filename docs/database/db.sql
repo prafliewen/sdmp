@@ -83,6 +83,7 @@ CREATE TABLE `clarification_question` (
     `resolved_by`   VARCHAR(64)  NULL                              COMMENT '解决人',
     `created_at`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '提出时间',
     `resolved_at`   DATETIME     NULL                              COMMENT '解决时间',
+    `version`       BIGINT       NOT NULL DEFAULT 0                COMMENT '乐观锁版本号',
     PRIMARY KEY (`id`),
     KEY `idx_clarification_work_item` (`work_item_id`),
     KEY `idx_clarification_status`    (`status`),

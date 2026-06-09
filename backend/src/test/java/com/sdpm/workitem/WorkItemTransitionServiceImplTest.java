@@ -85,6 +85,17 @@ class WorkItemTransitionServiceImplTest {
     }
 
     @Test
+    @DisplayName("乐观锁冲突 → 抛BIZ_VERSION_CONFLICT")
+    void shouldThrowVersionConflictOnTransit() {
+        when(workItemMapper.selectById(1L)).thenReturn(workItem);
+        when(workItemMapper.updateById(any(WorkItemEntity.class))).thenReturn(0);
+
+        BizException ex = assertThrows(BizException.class,
+                () -> transitionService.transit(1L, "ANALYZING", "原因"));
+        assertEquals(ErrorCode.BIZ_VERSION_CONFLICT.getCode(), ex.getErrorCode().getCode());
+    }
+
+    @Test
     @DisplayName("非法流转被StateMachine拦截")
     void shouldBeBlockedByStateMachine() {
         when(workItemMapper.selectById(1L)).thenReturn(workItem);
@@ -98,21 +109,23 @@ class WorkItemTransitionServiceImplTest {
 
     @Test
     @DisplayName("Guard拦截P0未解决时的流转")
-    void shouldBeBlockedByGuard() {
-        // 创建带 guard 拦截的 transitionService
-        WorkItemTransitionServiceImpl serviceWithGuards = new WorkItemTransitionServiceImpl() {
-            {
-                // 由于guards通过@Autowired(required=false)注入，在单元测试中会被设置为null
-                // 这里通过反射设置一个mock guard
-            }
-        };
-
+    void shouldBeBlockedByGuard() throws Exception {
         when(workItemMapper.selectById(1L)).thenReturn(workItem);
-        // guards 为空时不执行guard检查
-        when(workItemMapper.updateById(any(WorkItemEntity.class))).thenReturn(1);
-        when(historyMapper.insert(any(WorkItemStatusHistoryEntity.class))).thenReturn(1);
+        // 通过反射注入一个抛异常的 mock guard
+        WorkItemTransitionGuard blockingGuard = mock(WorkItemTransitionGuard.class);
+        doThrow(new BizException(ErrorCode.BIZ_P0_CLARIFICATION_BLOCKED, "P0未解决"))
+                .when(blockingGuard).check(any(WorkItemEntity.class), any(WorkItemStatusEnum.class));
+        java.lang.reflect.Field guardsField = WorkItemTransitionServiceImpl.class.getDeclaredField("guards");
+        guardsField.setAccessible(true);
+        guardsField.set(transitionService, Collections.singletonList(blockingGuard));
 
-        assertDoesNotThrow(() -> transitionService.transit(1L, "ANALYZING", "测试"));
+        BizException ex = assertThrows(BizException.class,
+                () -> transitionService.transit(1L, "ANALYZING", "测试"));
+        assertEquals(ErrorCode.BIZ_P0_CLARIFICATION_BLOCKED.getCode(), ex.getErrorCode().getCode());
+        verify(blockingGuard).check(any(WorkItemEntity.class), eq(WorkItemStatusEnum.ANALYZING));
+        // 拦截后不应执行 updateById / historyMapper.insert
+        verify(workItemMapper, never()).updateById(any(WorkItemEntity.class));
+        verify(historyMapper, never()).insert(any(WorkItemStatusHistoryEntity.class));
     }
 
     // ========== 查询历史 ==========

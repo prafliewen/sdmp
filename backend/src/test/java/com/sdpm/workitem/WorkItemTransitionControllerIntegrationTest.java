@@ -3,6 +3,8 @@ package com.sdpm.workitem;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sdpm.workitem.common.PageResp;
 import com.sdpm.workitem.dto.WorkItemTransitionReqDTO;
+import com.sdpm.workitem.service.StateMachine;
+import com.sdpm.workitem.service.WorkItemService;
 import com.sdpm.workitem.service.WorkItemTransitionService;
 import com.sdpm.workitem.vo.WorkItemStatusHistoryRespVO;
 import com.sdpm.workitem.vo.WorkItemTransitionRespVO;
@@ -35,6 +37,12 @@ class WorkItemTransitionControllerIntegrationTest {
 
     @MockBean
     private WorkItemTransitionService transitionService;
+
+    @MockBean
+    private WorkItemService workItemService;
+
+    @MockBean
+    private StateMachine stateMachine;
 
     private WorkItemTransitionRespVO respVO;
 

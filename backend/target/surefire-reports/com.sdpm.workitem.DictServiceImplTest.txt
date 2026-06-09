@@ -1,4 +1,27 @@
 -------------------------------------------------------------------------------
 Test set: com.sdpm.workitem.DictServiceImplTest
 -------------------------------------------------------------------------------
-Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.215 s -- in com.sdpm.workitem.DictServiceImplTest
+Tests run: 10, Failures: 1, Errors: 1, Skipped: 0, Time elapsed: 0.102 s <<< FAILURE! -- in com.sdpm.workitem.DictServiceImplTest
+com.sdpm.workitem.DictServiceImplTest.shouldCreateDict -- Time elapsed: 0.010 s <<< ERROR!
+org.mockito.exceptions.misusing.UnnecessaryStubbingException: 
+
+Unnecessary stubbings detected.
+Clean & maintainable test code requires zero unnecessary code.
+Following stubbings are unnecessary (click to navigate to relevant line of code):
+  1. -> at com.sdpm.workitem.DictServiceImplTest.shouldCreateDict(DictServiceImplTest.java:107)
+Please remove unnecessary stubbings or use 'lenient' strictness. More info: javadoc for UnnecessaryStubbingException class.
+	at org.mockito.junit.jupiter.MockitoExtension.afterEach(MockitoExtension.java:197)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+com.sdpm.workitem.DictServiceImplTest.shouldRejectDuplicateDictKey -- Time elapsed: 0.005 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Expected com.sdpm.workitem.exception.BizException to be thrown, but nothing was thrown.
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:73)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3115)
+	at com.sdpm.workitem.DictServiceImplTest.shouldRejectDuplicateDictKey(DictServiceImplTest.java:128)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

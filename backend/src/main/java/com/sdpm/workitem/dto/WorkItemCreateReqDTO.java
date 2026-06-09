@@ -1,5 +1,9 @@
 package com.sdpm.workitem.dto;
 
+import com.sdpm.workitem.enumeration.WorkItemPriorityEnum;
+import com.sdpm.workitem.enumeration.WorkItemTypeEnum;
+import com.sdpm.workitem.validation.EnumValue;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.util.List;
@@ -17,8 +21,10 @@ public class WorkItemCreateReqDTO {
     private String description;
 
     @NotBlank(message = "类型不能为空")
+    @EnumValue(enumClass = WorkItemTypeEnum.class, message = "类型必须是 STORY/BUG/TASK 之一")
     private String type;
 
+    @EnumValue(enumClass = WorkItemPriorityEnum.class, message = "优先级必须是 P0/P1/P2/P3 之一")
     private String priority = "P2";
 
     @Size(max = 64, message = "负责人长度不能超过64个字符")

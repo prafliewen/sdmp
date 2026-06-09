@@ -131,6 +131,10 @@ body {
 .tag-p2 { background: #e8f5e9; color: #2e7d32; }
 .tag-p3 { background: #e3f2fd; color: #1565c0; }
 
+.tag-story { background: #e8f5e9; color: #2e7d32; }
+.tag-bug { background: #fde8e8; color: #c62828; }
+.tag-task { background: #e3f2fd; color: #1565c0; }
+
 .status-badge {
   display: inline-block;
   padding: 2px 10px;

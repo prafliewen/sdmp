@@ -1,5 +1,8 @@
 package com.sdpm.workitem.dto;
 
+import com.sdpm.workitem.enumeration.WorkItemPriorityEnum;
+import com.sdpm.workitem.validation.EnumValue;
+
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -13,6 +16,7 @@ public class WorkItemUpdateReqDTO {
     @Size(max = 10000, message = "描述长度不能超过10000个字符")
     private String description;
 
+    @EnumValue(enumClass = WorkItemPriorityEnum.class, message = "优先级必须是 P0/P1/P2/P3 之一")
     private String priority;
 
     @Size(max = 64, message = "负责人长度不能超过64个字符")

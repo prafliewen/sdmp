@@ -18,6 +18,7 @@ import com.sdpm.workitem.service.ClarificationService;
 import com.sdpm.workitem.vo.ClarificationRespVO;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -41,16 +42,8 @@ public class ClarificationServiceImpl implements ClarificationService {
     @Transactional
     public ClarificationRespVO addQuestion(Long workItemId, ClarificationCreateReqDTO dto) {
         WorkItemEntity workItem = workItemMapper.selectById(workItemId);
-        if (workItem == null || workItem.getDeleted() != null && workItem.getDeleted() != 0) {
+        if (workItem == null || (workItem.getDeleted() != null && workItem.getDeleted() != 0)) {
             throw new BizException(ErrorCode.BIZ_NOT_FOUND);
-        }
-
-        LambdaQueryWrapper<ClarificationQuestionEntity> duplicateWrapper = new LambdaQueryWrapper<>();
-        duplicateWrapper.eq(ClarificationQuestionEntity::getWorkItemId, workItemId)
-                .eq(ClarificationQuestionEntity::getQuestion, dto.getQuestion());
-        ClarificationQuestionEntity duplicate = clarificationQuestionMapper.selectOne(duplicateWrapper);
-        if (duplicate != null) {
-            throw new BizException(ErrorCode.BIZ_DUPLICATE_QUESTION);
         }
 
         ClarificationQuestionEntity entity = new ClarificationQuestionEntity();
@@ -61,7 +54,12 @@ public class ClarificationServiceImpl implements ClarificationService {
         entity.setRaisedBy(StringUtils.hasText(dto.getRaisedBy()) ? dto.getRaisedBy() : UserContext.getOperator());
         entity.setCreatedAt(LocalDateTime.now());
 
-        clarificationQuestionMapper.insert(entity);
+        try {
+            clarificationQuestionMapper.insert(entity);
+        } catch (DuplicateKeyException e) {
+            // uk_clarification_question_work_item_question 兜底
+            throw new BizException(ErrorCode.BIZ_DUPLICATE_QUESTION);
+        }
 
         return toRespVO(entity);
     }
@@ -83,7 +81,10 @@ public class ClarificationServiceImpl implements ClarificationService {
         entity.setResolvedAt(LocalDateTime.now());
         entity.setStatus(ClarificationStatusEnum.RESOLVED.getCode());
 
-        clarificationQuestionMapper.updateById(entity);
+        int rows = clarificationQuestionMapper.updateById(entity);
+        if (rows == 0) {
+            throw new BizException(ErrorCode.BIZ_VERSION_CONFLICT);
+        }
 
         return toRespVO(entity);
     }
@@ -119,6 +120,14 @@ public class ClarificationServiceImpl implements ClarificationService {
                 .eq(ClarificationQuestionEntity::getSeverity, "P0")
                 .eq(ClarificationQuestionEntity::getStatus, ClarificationStatusEnum.OPEN.getCode());
 
+        return clarificationQuestionMapper.selectCount(wrapper);
+    }
+
+    @Override
+    public long countOpenByWorkItemId(Long workItemId) {
+        LambdaQueryWrapper<ClarificationQuestionEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ClarificationQuestionEntity::getWorkItemId, workItemId)
+                .eq(ClarificationQuestionEntity::getStatus, ClarificationStatusEnum.OPEN.getCode());
         return clarificationQuestionMapper.selectCount(wrapper);
     }
 

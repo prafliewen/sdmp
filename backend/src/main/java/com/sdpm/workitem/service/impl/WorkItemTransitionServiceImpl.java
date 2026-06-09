@@ -49,8 +49,15 @@ public class WorkItemTransitionServiceImpl implements WorkItemTransitionService 
             throw new BizException(ErrorCode.BIZ_NOT_FOUND);
         }
 
-        WorkItemStatusEnum current = WorkItemStatusEnum.fromCode(workItem.getStatus());
-        WorkItemStatusEnum target = WorkItemStatusEnum.fromCode(targetStatus);
+        WorkItemStatusEnum current;
+        WorkItemStatusEnum target;
+        try {
+            current = WorkItemStatusEnum.fromCode(workItem.getStatus());
+            target = WorkItemStatusEnum.fromCode(targetStatus);
+        } catch (IllegalArgumentException e) {
+            throw new BizException(ErrorCode.BIZ_PARAM_INVALID,
+                "未知的工作项状态: " + (e.getMessage() == null ? targetStatus : e.getMessage()));
+        }
 
         stateMachine.assertTransit(current, target);
 
@@ -61,7 +68,10 @@ public class WorkItemTransitionServiceImpl implements WorkItemTransitionService 
         }
 
         workItem.setStatus(target.getCode());
-        workItemMapper.updateById(workItem);
+        int rows = workItemMapper.updateById(workItem);
+        if (rows == 0) {
+            throw new BizException(ErrorCode.BIZ_VERSION_CONFLICT);
+        }
 
         String operator = UserContext.getOperator();
         WorkItemStatusHistoryEntity history = new WorkItemStatusHistoryEntity();

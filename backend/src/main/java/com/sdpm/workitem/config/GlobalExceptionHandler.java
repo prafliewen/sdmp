@@ -3,6 +3,8 @@ package com.sdpm.workitem.config;
 import com.sdpm.workitem.common.ErrorCode;
 import com.sdpm.workitem.common.Result;
 import com.sdpm.workitem.exception.BizException;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -24,7 +26,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BizException.class)
     @ResponseStatus(HttpStatus.OK)
     public Result<Void> handleBizException(BizException e) {
-        log.info("业务异常: code={}, message={}", e.getErrorCode().getCode(), e.getMessage());
+        log.warn("业务异常: code={}, message={}", e.getErrorCode().getCode(), e.getMessage());
         return Result.error(e.getErrorCode(), e.getMessage());
     }
 
@@ -48,6 +50,16 @@ public class GlobalExceptionHandler {
         return Result.error(ErrorCode.BIZ_PARAM_INVALID, msg);
     }
 
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result<Void> handleConstraintViolation(ConstraintViolationException e) {
+        String msg = e.getConstraintViolations().stream()
+                .map(GlobalExceptionHandler::formatViolation)
+                .collect(Collectors.joining("; "));
+        log.warn("约束违反: {}", msg);
+        return Result.error(ErrorCode.BIZ_PARAM_INVALID, msg);
+    }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Void> handleNotReadable(HttpMessageNotReadableException e) {
@@ -60,5 +72,10 @@ public class GlobalExceptionHandler {
     public Result<Void> handleException(Exception e) {
         log.error("系统异常", e);
         return Result.error(ErrorCode.SYS_INTERNAL);
+    }
+
+    private static String formatViolation(ConstraintViolation<?> v) {
+        String path = v.getPropertyPath() != null ? v.getPropertyPath().toString() : "";
+        return (path.isEmpty() ? "" : path + ": ") + v.getMessage();
     }
 }

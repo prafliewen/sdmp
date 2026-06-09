@@ -7,12 +7,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sdpm.workitem.ai.AiCapability;
+import com.sdpm.workitem.ai.adapter.AiAdapterRouter;
 import com.sdpm.workitem.common.ErrorCode;
 import com.sdpm.workitem.common.PageResp;
 import com.sdpm.workitem.entity.AiAnalysisResultEntity;
 import com.sdpm.workitem.entity.WorkItemEntity;
 import com.sdpm.workitem.enumeration.AiAnalysisTypeEnum;
-import com.sdpm.workitem.enumeration.AiSourceEnum;
 import com.sdpm.workitem.exception.BizException;
 import com.sdpm.workitem.mapper.AiAnalysisResultMapper;
 import com.sdpm.workitem.mapper.WorkItemMapper;
@@ -42,6 +42,9 @@ public class AiAnalysisServiceImpl implements AiAnalysisService {
 
     @Autowired
     private List<AiCapability> capabilities;
+
+    @Autowired
+    private AiAdapterRouter aiAdapterRouter;
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -85,7 +88,7 @@ public class AiAnalysisServiceImpl implements AiAnalysisService {
         entity.setWorkItemId(workItemId);
         entity.setAnalysisType(typeEnum.getCode());
         entity.setPayload(payloadJson);
-        entity.setSource(AiSourceEnum.MOCK.getCode());
+        entity.setSource(aiAdapterRouter.activeSource().getCode());
         entity.setCreatedAt(LocalDateTime.now());
 
         aiAnalysisResultMapper.insert(entity);

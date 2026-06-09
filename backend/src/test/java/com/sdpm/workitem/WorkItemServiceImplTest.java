@@ -12,6 +12,7 @@ import com.sdpm.workitem.entity.WorkItemStatusHistoryEntity;
 import com.sdpm.workitem.exception.BizException;
 import com.sdpm.workitem.mapper.WorkItemMapper;
 import com.sdpm.workitem.mapper.WorkItemStatusHistoryMapper;
+import com.sdpm.workitem.service.ClarificationService;
 import com.sdpm.workitem.service.impl.WorkItemServiceImpl;
 import com.sdpm.workitem.vo.WorkItemDetailRespVO;
 import com.sdpm.workitem.vo.WorkItemRespVO;
@@ -40,6 +41,9 @@ class WorkItemServiceImplTest {
 
     @Mock
     private WorkItemStatusHistoryMapper workItemStatusHistoryMapper;
+
+    @Mock
+    private ClarificationService clarificationService;
 
     @InjectMocks
     private WorkItemServiceImpl workItemService;
@@ -92,6 +96,16 @@ class WorkItemServiceImplTest {
         assertEquals("测试工作项", result.getTitle());
         assertEquals("STORY", result.getType());
         assertEquals("DRAFT", result.getStatus());
+
+        // 防止回归：insert 之前 entity 必须把所有字段填齐
+        ArgumentCaptor<WorkItemEntity> captor = ArgumentCaptor.forClass(WorkItemEntity.class);
+        verify(workItemMapper).insert(captor.capture());
+        WorkItemEntity inserted = captor.getValue();
+        assertEquals("STORY", inserted.getType());
+        assertEquals("P1", inserted.getPriority());
+        assertEquals("DRAFT", inserted.getStatus());
+        assertNotNull(inserted.getTags());
+        assertNotNull(inserted.getAcceptanceCriteria());
     }
 
     @Test
@@ -99,11 +113,25 @@ class WorkItemServiceImplTest {
     void shouldAutoGenerateCode() {
         createReq.setCode(null);
         mockInsertSuccess();
+        doReturn(null).when(workItemMapper).selectMaxCodeByPrefix(ArgumentMatchers.anyString());
 
         WorkItemRespVO result = workItemService.createWorkItem(createReq);
 
         assertNotNull(result.getCode());
         assertTrue(result.getCode().startsWith("WI-"));
+    }
+
+    @Test
+    @DisplayName("基于当日最大编号自增")
+    void shouldIncrementCodeFromLatest() {
+        createReq.setCode(null);
+        mockInsertSuccess();
+        String today = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"));
+        doReturn("WI-" + today + "-000042").when(workItemMapper).selectMaxCodeByPrefix(ArgumentMatchers.anyString());
+
+        WorkItemRespVO result = workItemService.createWorkItem(createReq);
+
+        assertEquals("WI-" + today + "-000043", result.getCode());
     }
 
     @Test
@@ -115,6 +143,27 @@ class WorkItemServiceImplTest {
         WorkItemRespVO result = workItemService.createWorkItem(createReq);
 
         assertEquals("CUSTOM-001", result.getCode());
+    }
+
+    @Test
+    @DisplayName("code生成遇唯一键冲突时自动重试")
+    void shouldRetryOnDuplicateCode() {
+        createReq.setCode(null);
+        // 第一次 insert 抛 DuplicateKeyException（模拟并发碰撞），第二次成功
+        doThrow(new org.springframework.dao.DuplicateKeyException("uk_work_item_code"))
+                .doAnswer(inv -> {
+                    WorkItemEntity e = inv.getArgument(0);
+                    e.setId(1L);
+                    return 1;
+                })
+                .when(workItemMapper).insert(ArgumentMatchers.<WorkItemEntity>any());
+        doReturn(1).when(workItemStatusHistoryMapper).insert(ArgumentMatchers.<WorkItemStatusHistoryEntity>any());
+        doReturn(null).when(workItemMapper).selectMaxCodeByPrefix(ArgumentMatchers.anyString());
+
+        WorkItemRespVO result = workItemService.createWorkItem(createReq);
+
+        assertNotNull(result.getCode());
+        verify(workItemMapper, times(2)).insert(ArgumentMatchers.<WorkItemEntity>any());
     }
 
     // ========== 更新 ==========
@@ -131,6 +180,13 @@ class WorkItemServiceImplTest {
         WorkItemRespVO result = workItemService.updateWorkItem(1L, updateReq);
 
         assertEquals("更新后的标题", result.getTitle());
+
+        // captor 验证 updateById 传入的 entity 包含正确的 title 和 version
+        ArgumentCaptor<WorkItemEntity> captor = ArgumentCaptor.forClass(WorkItemEntity.class);
+        verify(workItemMapper).updateById(captor.capture());
+        WorkItemEntity updated = captor.getValue();
+        assertEquals("更新后的标题", updated.getTitle());
+        assertEquals(0L, updated.getVersion());
     }
 
     @Test
@@ -240,13 +296,12 @@ class WorkItemServiceImplTest {
     @DisplayName("软删除成功")
     void shouldSoftDelete() {
         doReturn(savedEntity).when(workItemMapper).selectById(1L);
-        doReturn(1).when(workItemMapper).updateById(ArgumentMatchers.<WorkItemEntity>any());
+        doReturn(1).when(workItemMapper).deleteById(ArgumentMatchers.<Long>any());
 
         assertDoesNotThrow(() -> workItemService.softDeleteWorkItem(1L));
 
-        ArgumentCaptor<WorkItemEntity> captor = ArgumentCaptor.forClass(WorkItemEntity.class);
-        verify(workItemMapper).updateById(captor.capture());
-        assertEquals(1, captor.getValue().getDeleted());
+        // 软删除必须走 deleteById（@TableLogic 字段在 updateById 的 SET 子句中会被剔除）
+        verify(workItemMapper).deleteById(1L);
     }
 
     @Test
